@@ -4,11 +4,10 @@ import Data.Matrix (multStd, Matrix, elementwise, colVector, transpose, diagonal
 -- import qualified Data.List.NonEmpty as NE (NonEmpty, zipWith, map)
 import Data.Vector (fromList)
 import Data.Bifunctor (bimap)
-import Control.Monad (join)
+import Control.Monad (join, liftM2)
 import Data.List.Split (chunksOf)
 import Control.Monad.Random (getRandomR, Rand, StdGen, getRandomRs)
 import Control.Monad.Random.Class (MonadRandom)
-import Control.Monad
 
 type Vec = [Double]
 type NRInput = Vec
@@ -133,14 +132,22 @@ train (b:restB) net =
 combineMonads :: (Monad m) => [m a] -> m [a]
 combineMonads = foldr (liftM2 (:)) (return [])
 
-
 randomMatrix :: (MonadRandom m) => Int -> Int -> m (Matrix Double)
 randomMatrix rows cols = fmap (fromLists . take rows . chunksOf cols) (getRandomRs (0,1))
+
+randomMatrices rows cols = combineMonads $ zipWith randomMatrix rows cols
+
+randomVector :: (MonadRandom m) => Int -> m [Double]
+randomVector deg = fmap (take deg) $ getRandomRs (0,1)
+
+randomVectors :: (MonadRandom m) => [Int] -> m [[Double]]
+randomVectors = combineMonads . map randomVector
 
 randomNetwork :: (MonadRandom m) => Int -> [Int] -> Int -> m NRNetwork
 randomNetwork input hiddens output = 
     let hail = input : hiddens
         tail = hiddens ++ [output]
-    in do
-        undefined  
+        weights = randomMatrices tail hail
+        biases = randomVectors tail
+    in  liftM2 zip weights biases
 

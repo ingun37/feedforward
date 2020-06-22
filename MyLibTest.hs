@@ -10,6 +10,6 @@ v2 = [-3.0, -4.0]
 
 main :: IO ()
 main = do
-    aa <- randomMatrix 2 2
+    aa <- randomNetwork 1 [2] 1
     print aa
     print $ [-2.0,3.0] == affineT (m22, v2) [1.0,2.0]
