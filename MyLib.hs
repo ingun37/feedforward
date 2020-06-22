@@ -1,10 +1,14 @@
 module MyLib where
 
-import Data.Matrix (multStd, Matrix, elementwise, colVector, transpose, diagonal, fromLists, mapPos, toList)
+import Data.Matrix (multStd, Matrix, elementwise, colVector, transpose, diagonal, fromLists, mapPos, toList, matrix)
 -- import qualified Data.List.NonEmpty as NE (NonEmpty, zipWith, map)
 import Data.Vector (fromList)
 import Data.Bifunctor (bimap)
 import Control.Monad (join)
+import Data.List.Split (chunksOf)
+import Control.Monad.Random (getRandomR, Rand, StdGen, getRandomRs)
+import Control.Monad.Random.Class (MonadRandom)
+import Control.Monad
 
 type Vec = [Double]
 type NRInput = Vec
@@ -17,6 +21,9 @@ weights = fst
 biases = snd
 type NRNetwork = [NRPass]
 type DifferentialNetwork = NRNetwork
+
+aaa :: IO Int
+aaa = getRandomR (1,5)
 
 (.*) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 (.*) = (.) . (.)
@@ -122,3 +129,18 @@ train [] net = net
 train (b:restB) net =
     let gC = gradBatch net b
     in zipWithNetwork (+) net (mapNetwork (*0.0001) (normalize gC))
+
+combineMonads :: (Monad m) => [m a] -> m [a]
+combineMonads = foldr (liftM2 (:)) (return [])
+
+
+randomMatrix :: (MonadRandom m) => Int -> Int -> m (Matrix Double)
+randomMatrix rows cols = fmap (fromLists . take rows . chunksOf cols) (getRandomRs (0,1))
+
+randomNetwork :: (MonadRandom m) => Int -> [Int] -> Int -> m NRNetwork
+randomNetwork input hiddens output = 
+    let hail = input : hiddens
+        tail = hiddens ++ [output]
+    in do
+        undefined  
+
